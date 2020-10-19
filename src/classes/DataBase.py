@@ -2,7 +2,7 @@ import psycopg2
 import numpy as np
 import src.utils.functions as funcs
 
-class database:
+class DataBase:
 
     def __init__(self, data):
         self.__data = data
@@ -18,6 +18,49 @@ class database:
 
         self.__cursor = self.__conn.cursor()
         self.__cursor.execute(sql, args)
+        self.__conn.commit()
+
+    def delete(self, table, where=None, adicional=None):
+
+        sql = 'DELETE FROM '+table
+
+        if where != None:
+            aux = ''
+            for key, elem in where.items():
+                aux += key + " = '"+ elem + "', "
+
+            sql += ' WHERE '+ aux[0:-2]
+
+        if adicional != None:
+            sql += adicional
+
+        self.__cursor = self.__conn.cursor()
+        self.__cursor.execute(sql)
+        self.__conn.commit()
+
+
+    def update(self, table, data, where=None, adicional=None):
+
+        sql = 'UPDATE '+table
+
+        aux = ''
+        for key, elem in data.items():
+            aux += key + " = '"+ elem + "', "
+
+        sql += ' SET '+ aux[0:-2]
+
+        if where != None:
+            aux = ''
+            for key, elem in where.items():
+                aux += key + " = '"+ elem + "', "
+
+            sql += ' WHERE '+ aux[0:-2]
+
+        if adicional != None:
+            sql += adicional
+
+        self.__cursor = self.__conn.cursor()
+        self.__cursor.execute(sql)
         self.__conn.commit()
 
 
@@ -41,7 +84,8 @@ class database:
         return rows
 
     def close(self):
-        self.__cursor.close()
+        if hasattr(self, '__cursor'):
+            self.__cursor.close()
         self.__conn.close()
 
     def createTables(self):
@@ -65,6 +109,7 @@ class database:
         self.__cursor.execute("DROP TABLE IF EXISTS tb_lot")
 
         sql ='''CREATE TABLE tb_lot(
+            id SERIAL PRIMARY KEY,
             code CHAR(5) NOT NULL,
             qtd int,
             cost FLOAT,

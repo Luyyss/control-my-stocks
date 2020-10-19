@@ -29,7 +29,7 @@ def getStockInfo(name):
     page = getStockPage(name)
 
     data = {
-        'name':getStockName(page),
+        # 'name':getStockName(page),
         'price':getStockPrice(page),
         'change':getStockChange(page)
     }
@@ -37,41 +37,22 @@ def getStockInfo(name):
     return data
 
 def getAllStocksSymbols():
+
+    stocks = []
+    
     page = getWebPage('https://www.infomoney.com.br/cotacoes/empresas-b3/')
     tree = html.fromstring(page)
     content = tree.xpath("//div[contains(@class, 'article-content')]")[0]
 
-    stocks = []
-
     for tbody in content.xpath("//tbody"):
-        for tr in tbody: #.xpath("//tr"):
+        for tr in tbody:
 
             name = tr.getchildren()[0].text
-            # print(name)
 
-            for td in tr: # tr.xpath("//td[contains(@class, 'strong')]"):
-                for link in td.iterlinks():
-                    code = link[0].text
-                    # print(code)
-                    if not code.endswith('F') and not code.endswith('34') and not code.endswith('11') and not code.endswith('12'):
-                        stocks.append( [code, name ] )
-
-
-
-    # for link in content:
-    #     name = link[0].text
-    #     if not name.endswith('F') and not name.endswith('34') and not name.endswith('11') and not name.endswith('12'):
-    #         stocks.append( name )
-
-
-    # content = tree.xpath("//div[contains(@class, 'article-content')]")[0].iterlinks()
-
-    # stocks = []
-
-    # for link in content:
-    #     name = link[0].text
-    #     if not name.endswith('F') and not name.endswith('34') and not name.endswith('11') and not name.endswith('12'):
-    #         stocks.append( name )
+            for link in tr.iterlinks():
+                code = link[0].text
+                if not code.endswith('F') and not code.endswith('34') and not code.endswith('11') and not code.endswith('12'):
+                    stocks.append( code + ' | ' + name )
 
     writeStocksToFile(str(stocks))
 
@@ -84,6 +65,16 @@ def writeStocksToFile(data):
     f = open('stocks.json', 'w')
     f.write(data)
     f.close()
+
+def readStocksFile():
+
+    import ast
+
+    f = open('stocks.json', 'r')
+    t = f.read()
+    f.close()
+
+    return ast.literal_eval(t)
 
 # def formatFloat(f, d):
 #     return f'{"{:."+str(d)+"f}".format(f)}'

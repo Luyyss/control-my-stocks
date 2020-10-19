@@ -2,7 +2,12 @@
 
 {% block title %}My Stocks{% endblock %}
 {% block content %}
-<h1 class="white">Lista de ações</h1>
+<h3 class="white">
+    Lista de ações 
+    <button type="button" class="btn right btnAdd white" data-toggle="modal" data-target="#exampleModal">
+        <img src="/static/image/plus-square.svg"/>
+    </button>
+</h3>
 
 <div class="accordion" id="myAccordion"></div>
 

@@ -1,13 +1,26 @@
+app = {'data':{}}
+
 $(document).ready(function () {
     getData()
-
+    createGetDataInterval()
     getAutocompleteData()
 })
 
+function createGetDataInterval() {
+    window.getDataInterval = setInterval(getData, 1 * 60 * 1000) // 1 minuto
+}
+
+function stopInterval() {
+    clearInterval( window.getDataInterval )
+}
+
 function getData() {
     try {
+        showLoader('#myAccordion')
+
         $.get('/app/data', function (data) {
             displayStocks(data.stocks)
+            displayLots(data.lots)
         })
     } catch (error) { console.log(error) }
 }
@@ -15,54 +28,197 @@ function getData() {
 function getAutocompleteData() {
     try {
         $.get('/app/stocks', function (data) {
-            autocomplete(document.getElementById("stock_name"), data);
+            autocomplete(document.getElementById("stock_name"), data );
         })
     } catch (error) { console.log(error) }
 }
 
 function displayStocks(data) {
-    for (let i = 0; i < data.length; i++) {
-        stock = data[i];
 
-        $('#myAccordion').append('<div class="card">\n\
-            <div class="card-header" id="head' + i + '" data-toggle="collapse" data-target="#collapse' + i + '" aria-expanded="true" \n\
-                aria-controls="collapse' + i + '">\n\
+    renderStocksTitle()
+
+    for (let i = 0; i < data.length; i++) {
+        renderStock( data[i], i )
+    }
+}
+
+function renderStocksTitle() {
+    $('#myAccordion').html(
+        '<div class="card">\n\
+            <div class="card-header" id="head" data-toggle="collapse" data-target="#collapse" aria-expanded="true" \n\
+                aria-controls="collapse">\n\
                 <div class="row">\n\
-                    <div class="col-4">' + stock.name + '</div>\n\
-                    <div class="col-4">' + stock.price + '</div>\n\
-                    <div class="col-4">' + stock.change + '</div>\n\
+                    <div class="col-1">Código</div>\n\
+                    <div class="col-2">Ações</div>\n\
+                    <div class="col-2">Preço</div>\n\
+                    <div class="col-2">Hoje</div>\n\
+                    <div class="col-2">P. médio</div>\n\
+                    <div class="col-2">Saldo</div>\n\
+                    <div class="col-1">&nbsp;</div>\n\
                 </div>\n\
             </div>\n\
-            <div id="collapse' + i + '" class="collapse" aria-labelledby="head' + i + '" data-parent="#myAccordion">\n\
-                <div class="card-body">\n\
-                    Content ' + stock.name + '\n\
-                </div>\n\
+        </div>'
+    )
+}
+
+function displayLots(data) {
+    for (let i = 0; i < data.length; i++) {
+        renderLot( data[i], i )
+    }
+}
+
+function renderStock(stock, i) {
+    $('#myAccordion').append('<div class="card" id="stock'+stock.code+'">\n\
+        <div class="card-header cursor" id="head' + i + '" data-toggle="collapse" data-target="#collapse' + i + '" aria-expanded="true" \n\
+            aria-controls="collapse' + i + '">\n\
+            <div class="row">\n\
+                <div class="col-1">' + stock.code + '</div>\n\
+                <div class="col-2">' + stock.total_qtd + '</div>\n\
+                <div class="col-2">' + displayMoney(stock.price) + '</div>\n\
+                <div class="col-2">' + stock.change + '</div>\n\
+                <div class="col-2">' + displayMoney(stock.price) + '</div>\n\
+                <div class="col-2">' + stock.change + '</div>\n\
+                <div class="col-1"><img src="/static/image/x-square.svg" title="Remover ação" class="cursor" onclick="requestRemove(\''+stock.code+'\')"/></div>\n\
+            </div>\n\
+        </div>\n\
+        <div id="collapse' + i + '" class="collapse" aria-labelledby="head' + i + '" data-parent="#myAccordion">\n\
+            <div class="card-body">\n\
+                <div class="lots"></div>\n\
+                <button type="button" class="btn white" onclick="requestAddLot(\''+stock.code+'\')">\n\
+                    <img src="/static/image/plus-square.svg"/>\n\
+                </button>\n\
+            </div>\n\
+        </div>\n\
+    </div>')
+}
+
+function renderLot(lot, i) {
+    $('#stock'+lot[1]+' .collapse .card-body .lots').append('<div class="lot" id="lot'+lot[0]+'">\n\
+            <div class="row">\n\
+                <div class="col-3">' + lot[4] + '</div>\n\
+                <div class="col-3">' + lot[2] + '</div>\n\
+                <div class="col-2">' + displayMoney(lot[3]) + '</div>\n\
+                <div class="col-3">' + displayMoney(parseInt(lot[2]) * parseFloat(lot[3])) + '</div>\n\
+                <div class="col-1"><img src="/static/image/x-square.svg" title="Remover ação" class="cursor" onclick="requestRemoveLot(\''+lot[0]+'\')"/></div>\n\
             </div>\n\
         </div>')
-    }
+
+}
+
+function displayMoney(m) {
+    return 'R$ '+parseFloat(m).toFixed(2)
 }
 
 function salvarNovaAcao() {
 
     stock_name = $('#stock_name').val();
-    if (stock_name != '') {
+    if (stock_name != '' && stock_name.includes(' | ')) {
         $.post('/app/new', { 'stock': stock_name }, function (res) {
-            console.log(res)
+
+            $('#stock_name').val('')
+
+            if(res.status == 'ok')
+                getData()
         });
     }
 
     $('#exampleModal').modal('hide');
 }
 
+function requestRemove(stock) {
+    event.stopPropagation()
+    if(confirm('Deseja realmente remover esta ação?')) {
+        $.post('/app/remove', {'stock':stock}, function(res){
+            if(res.status == 'ok')
+                $('#stock'+stock).remove()
+            })
+        }
+}
 
+function showLoader(target) {
+    $(target).html('<div class="loader"><img src="/static/image/loader.svg"/></div>')
+}
 
+function requestAddLot(stock) {
+    stopInterval()
+    app.data.stock = stock
+    $('#stock'+stock+' .card-body').append( getBlockAddLot() )
+}
 
+function getBlockAddLot() {
+    return '<form onsubmit="return saveNewLot(this)">\n\
+                <div class="row">\n\
+                    <div class="col-3">\n\
+                        <label>Data</label>\n\
+                        <input type="text" name="data"/>\n\
+                    </div>\n\
+                    <div class="col-3">\n\
+                        <label>Quantidade</label>\n\
+                        <input type="text" name="qtd"/>\n\
+                    </div>\n\
+                    <div class="col-3">\n\
+                        <label>Preço</label>\n\
+                        <input type="text" name="preco"/>\n\
+                    </div>\n\
+                    <div class="col-2 contentPaidValue">\n\
+                        <b</b>\n\
+                    </div>\n\
+                    <div class="col-1">\n\
+                        <button type="submit" onclick="saveAddLot(this)"><img src="static/image/check-square.svg"/></button>\n\
+                    </div>\n\
+                </div>\n\
+            </form>'
+}
 
+function saveAddLot(el) {
+    return saveNewLot( $(el).parent().parent().parent() )
+}
 
+app.isSalvando = false
 
+function saveNewLot(el) {
 
+    if( ! app.isSalvando) {
 
+        app.isSalvando = true
 
+        data = {
+            'stock':app.data.stock,
+            'data':$(el).find("input[name='data']").val(),
+            'qtd':$(el).find("input[name='qtd']").val(),
+            'preco':$(el).find("input[name='preco']").val()
+        }
+
+        if(data.qtd != '' && data.preco != '') {
+            $.post('/app/lot', data, function(res) {
+
+                app.isSalvando = false
+
+                if(res.status == 'ok') {
+                    getData()
+                    createGetDataInterval()
+                }
+            })
+        }
+    }
+    
+    return false
+}
+
+function requestRemoveLot(id) {
+    event.stopPropagation()
+    if(confirm('Deseja realmente remover este lote?')) {
+        $.ajax({
+            url: '/app/lot',
+            type: 'DELETE',
+            data: {'id':id},
+            success: function(res) {
+                console.log(res)
+                $('#lot'+id).remove()
+            }
+        });
+    }
+}
 
 
 function autocomplete(inp, arr) {
@@ -127,6 +283,7 @@ function autocomplete(inp, arr) {
             if (currentFocus > -1) {
                 /*and simulate a click on the "active" item:*/
                 if (x) x[currentFocus].click();
+                salvarNovaAcao()
             }
         }
     });
