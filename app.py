@@ -68,8 +68,8 @@ def getPrices():
 @app.route('/app/stocks', methods=['GET'])
 def getStocks():
 
-    # return jsonify( funcs.getAllStocksSymbols() )
-    return jsonify( funcs.readStocksFile() )
+    return jsonify( funcs.getAllStocksSymbols() )
+    # return jsonify( funcs.readStocksFile() )
 
 
 @app.route('/app/stock', methods=['POST', 'DELETE'])

@@ -53,9 +53,9 @@ function displayStocksInfo(data) {
         info = data[i]
 
         $('#stock'+info['code']).find('.change').html(info['change'])
-        $('#stock'+info['code']).find('.price').html(info['price'])
-        $('#stock'+info['code']).find('.avg').html(info['avg_cost'])
-        $('#stock'+info['code']).find('.stats').html(info['resume'])
+        $('#stock'+info['code']).find('.price').html(displayMoney(info['price']))
+        $('#stock'+info['code']).find('.avg').html(displayMoney(info['avg_cost']))
+        $('#stock'+info['code']).find('.stats').html(displayMoney( info['resume'][0] ) + ' ('+displayMoney(info['resume'][0])+')')
     }
 }
 
@@ -88,6 +88,9 @@ function renderStocksTitle() {
 }
 
 function displayLots(data) {
+
+    $('#stock'+data[0][1]+' .collapse .card-body .lots').html('') // TO CLEAR LOT SPACE
+
     for (let i = 0; i < data.length; i++) {
         renderLot( data[i] )
     }
@@ -100,10 +103,10 @@ function renderStock(stock, i) {
             <div class="row">\n\
                 <div class="col-1">' + stock[0] + '</div>\n\
                 <div class="col-2">' + stock[2] + '</div>\n\
-                <div class="col-2 change"></div>\n\
-                <div class="col-2 price"></div>\n\
-                <div class="col-2 avg"></div>\n\
-                <div class="col-2 stats"></div>\n\
+                <div class="col-2 change">--</div>\n\
+                <div class="col-2 price">--</div>\n\
+                <div class="col-2 avg">--</div>\n\
+                <div class="col-2 stats">--</div>\n\
                 <div class="col-1"><img src="/static/image/x-square.svg" title="Remover ação" class="cursor" onclick="requestRemove(\''+stock[0]+'\')"/></div>\n\
             </div>\n\
         </div>\n\
@@ -189,8 +192,6 @@ function requestAddLot(stock) {
 
     IMask( document.getElementsByClassName('date-mask'),{
         mask: Date,
-        // min: new Date(1990, 0, 1),
-        // max: new Date(2020, 0, 1),
         lazy: false
     });
 
@@ -279,11 +280,8 @@ function requestRemoveLot(id, stock) {
 }
 
 function displayResumeTotal(data) {
-    // {"result":98.46,"result_percent":7.23,"total_paid":1361.25996,"total_today":1459.72},
-    $('#stocksResume').html(
-        '<b>'+displayMoney(data['total_today'])+'</b>\n\
-        <span>'+displayMoney(data['result'])+' ('+data['result_percent']+'%) </span>'
-    )
+    $('#stocksResume b').html(displayMoney(data['total_today']))
+    $('#stocksResume span').html(displayMoney(data['result'])+' ('+data['result_percent']+'%')
 }
 
 
