@@ -39,7 +39,7 @@ def getStockInfo(name):
 def getAllStocksSymbols():
 
     stocks = []
-    
+
     page = getWebPage('https://www.infomoney.com.br/cotacoes/empresas-b3/')
     tree = html.fromstring(page)
     content = tree.xpath("//div[contains(@class, 'article-content')]")[0]

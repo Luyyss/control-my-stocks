@@ -1,3 +1,4 @@
+from src.classes.Stock import Stock
 
 class StockControll:
 
@@ -16,8 +17,30 @@ class StockControll:
 
     def addLot(self, code, data, qtd, cost, db):
         db.insert('tb_lot', ['code', 'dt_buy', 'qtd', 'cost'], [code, data, qtd, cost])
+        self.__calculeAvgPrice(code, db)
         return True
 
     def removeLot(self, id, db):
         db.delete('tb_lot', {'id':id} )
         return True
+
+    def __calculeAvgPrice(self, code, db):
+        # res = db.select('tb_stock', None, {'code':code})[0]
+        # stock = Stock(res[0], res[1], res[2], res[3], res[1] )
+        res = db.select('tb_lot', ['qtd', 'cost'], {'code':code})
+
+        sumQtd = 0
+        amount = 0
+
+        print(res)
+
+        for qtd, cost in res:
+            sumQtd += int(qtd)
+            amount += int(qtd) * float(cost)
+
+        avg = amount / sumQtd
+
+        print(sumQtd)
+        print(amount)
+        print(avg)
+        # ((stock.qtd * stock.avg) + ( * ) ) / ( + )

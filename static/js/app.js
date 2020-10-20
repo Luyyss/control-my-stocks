@@ -76,8 +76,8 @@ function renderStock(stock, i) {
                 <div class="col-2">' + stock.total_qtd + '</div>\n\
                 <div class="col-2">' + displayMoney(stock.price) + '</div>\n\
                 <div class="col-2">' + stock.change + '</div>\n\
-                <div class="col-2">' + displayMoney(stock.price) + '</div>\n\
-                <div class="col-2">' + stock.change + '</div>\n\
+                <div class="col-2">' + displayMoney(stock.avg_cost) + '</div>\n\
+                <div class="col-2 stats">----</div>\n\
                 <div class="col-1"><img src="/static/image/x-square.svg" title="Remover ação" class="cursor" onclick="requestRemove(\''+stock.code+'\')"/></div>\n\
             </div>\n\
         </div>\n\
@@ -102,10 +102,11 @@ function renderLot(lot, i) {
                 <div class="col-1"><img src="/static/image/x-square.svg" title="Remover ação" class="cursor" onclick="requestRemoveLot(\''+lot[0]+'\')"/></div>\n\
             </div>\n\
         </div>')
-
 }
 
 function displayMoney(m) {
+    if(m == '0')
+        return '----'
     return 'R$ '+parseFloat(m).toFixed(2)
 }
 

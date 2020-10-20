@@ -7,13 +7,13 @@ from flask import jsonify
 import numpy as np
 
 db = DataBase(va['DATABASE'])
-db.createTables()
+# db.createTables()
 
-db.insert('tb_stock', ['code', 'name'], ['BBSE3', 'BB Seguridade']) #, '0', '0', '0'
-db.insert('tb_stock', ['code', 'name'], ['ITSA4', 'Itaúsa']) #, 'total_qtd', 'avg_cost', 'last_price'
+# db.insert('tb_stock', ['code', 'name'], ['BBSE3', 'BB Seguridade']) #, '0', '0', '0'
+# db.insert('tb_stock', ['code', 'name'], ['ITSA4', 'Itaúsa']) #, 'total_qtd', 'avg_cost', 'last_price'
 
-all_stocks = db.select('tb_stock', ['code', 'total_qtd'])
-print(all_stocks)
+# all_stocks = db.select('tb_stock', ['code', 'total_qtd'])
+# print(all_stocks)
 
 # for stock, amount in all_stocks:
 #     print(stock, amount)
@@ -50,8 +50,8 @@ print(all_stocks)
 # all_stocks = db.select('tb_stock', ['code', 'name', 'total_qtd'])
 # print(all_stocks)
 
-# stc = StockControll()
-# stc.addLot('ITSA4', '2020-10-19', '15', '9.37', db)
+stc = StockControll()
+stc.addLot('ITSA4', '2020-10-18', '17', '9.25', db)
 
 # all_lots = db.select('tb_lot')
 # print(all_lots)

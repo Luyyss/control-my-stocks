@@ -23,7 +23,7 @@ def home():
 def getData():
 
     # all_stocks = [['ITSA4', 111], ['BBSE3', 25], ['CIEL3', 225], ['BIDI4', 15]]
-    all_stocks = db.select('tb_stock', ['code', 'name', 'total_qtd'])
+    all_stocks = db.select('tb_stock', ['code', 'name', 'total_qtd', 'avg_cost'])
     all_lots = db.select('tb_lot')
 
     data = {
@@ -35,11 +35,12 @@ def getData():
         }
     }
 
-    for stock, name, amount in all_stocks:
+    for stock, name, amount, avg_cost in all_stocks:
         aux = funcs.getStockInfo( stock )
         aux['code'] = stock
         aux['name'] = name
-        aux['amount'] = amount
+        aux['total_qtd'] = amount
+        aux['avg_cost'] = avg_cost
         data['stocks'].append( aux )
         data['info']['total'] += float(aux['price']) * int(amount)
 

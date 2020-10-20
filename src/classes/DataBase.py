@@ -71,7 +71,11 @@ class DataBase:
         sql = 'SELECT '+cols+' FROM '+ table
 
         if where != None:
-            sql += ' WHERE '+funcs.joinDict(where)
+            aux = ''
+            for key, elem in where.items():
+                aux += key + " = '"+ elem + "', "
+
+            sql += ' WHERE '+ aux[0:-2]
 
         if adicional != None:
             sql += adicional
@@ -99,9 +103,10 @@ class DataBase:
             code CHAR(5) UNIQUE NOT NULL,
             name CHAR(200),
             total_qtd INT DEFAULT 0,
-            avg_cost FLOAT DEFAULT 0,
-            last_price FLOAT DEFAULT 0
+            avg_cost FLOAT DEFAULT 0
         )'''
+
+        # last_price FLOAT DEFAULT 0
 
         self.__cursor.execute(sql)
         
