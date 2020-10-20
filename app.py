@@ -2,7 +2,7 @@ import src.utils.functions as funcs
 from src.classes.DataBase import DataBase
 from src.utils.defaults import variables as va
 from src.classes.StockControll import StockControll
-from flask import Flask, redirect, url_for, render_template, jsonify, request
+from flask import Flask, session, render_template, jsonify, request
 
 
 db = DataBase(va['DATABASE'])
@@ -19,10 +19,16 @@ app.config.update(
 def home():
     return render_template('index.html')
 
-@app.route('/app/data')
+
+@app.route('/app/data', methods=['GET'])
 def getData():
 
-    # all_stocks = [['ITSA4', 111], ['BBSE3', 25], ['CIEL3', 225], ['BIDI4', 15]]
+    all_stocks = db.select('tb_stock', ['code', 'name', 'total_qtd', 'avg_cost'])
+    return jsonify(all_stocks)
+
+@app.route('/app/prices', methods=['GET'])
+def getPrices():
+
     all_stocks = db.select('tb_stock', ['code', 'name', 'total_qtd', 'avg_cost'])
     all_lots = db.select('tb_lot')
 
@@ -30,10 +36,14 @@ def getData():
         'stocks': [],
         'lots': all_lots,
         'info':{
-            'total':0,
-            'result':0
+            'total_paid':0,
+            'total_today':0,
+            'result':0,
+            'result_percent':0
         }
     }
+
+    stc = StockControll()
 
     for stock, name, amount, avg_cost in all_stocks:
         aux = funcs.getStockInfo( stock )
@@ -41,21 +51,31 @@ def getData():
         aux['name'] = name
         aux['total_qtd'] = amount
         aux['avg_cost'] = avg_cost
+        aux['resume'] = stc.calculeResume(aux)
         data['stocks'].append( aux )
-        data['info']['total'] += float(aux['price']) * int(amount)
+        data['info']['total_today'] += float(aux['price']) * int(amount)
+        data['info']['total_paid'] += float(avg_cost) * int(amount)
+
+    data['info']['result'] = data['info']['total_today'] - data['info']['total_paid']
+    data['info']['result_percent'] = funcs.formatFloat( (data['info']['result'] / data['info']['total_paid']) * 100 )
+
+    data['info']['result'] = funcs.formatFloat(data['info']['result'])
+    data['info']['refresh'] = funcs.validCurrentTime()
 
     return jsonify(data)
 
 
-@app.route('/app/stocks')
+@app.route('/app/stocks', methods=['GET'])
 def getStocks():
 
     # return jsonify( funcs.getAllStocksSymbols() )
     return jsonify( funcs.readStocksFile() )
 
 
-@app.route('/app/new', methods=['POST'])
+@app.route('/app/stock', methods=['POST', 'DELETE'])
 def newStock():
+
+    data = {'status':''}
 
     if request.method == "POST":
 
@@ -63,7 +83,6 @@ def newStock():
 
         code, name = stock.split(' | ')
 
-        data = {}
         stc = StockControll()
 
         if len(stock) > 0:
@@ -73,23 +92,17 @@ def newStock():
         else:
             data['status'] = 'erro'
 
-        return jsonify(data)
-
-
-@app.route('/app/remove', methods=['POST'])
-def removeStock():
-
-    if request.method == "POST":
+    elif request.method == "DELETE":
 
         stc = StockControll()
         stock = request.form['stock']
         stc.removeStock(stock, db)
 
-        data = {'status':'ok'}
-        return jsonify(data)
+        data['status'] = 'ok'
 
+    return jsonify(data)
 
-@app.route('/app/lot', methods=['POST'])
+@app.route('/app/lot', methods=['POST', 'DELETE'])
 def newLot():
 
     if request.method == "POST":
@@ -101,20 +114,20 @@ def newLot():
 
         stc = StockControll()
         stc.addLot(stock, data, qtd, preco, db)
-        stc.updateTotal(stock, qtd, db)
+        stc.calculeStatsFromLots(stock, db)
 
         data = {'status':'ok'}
         return jsonify(data)
 
-@app.route('/app/lot', methods=['DELETE'])
-def removeLot():
+    elif request.method == "DELETE":
 
-    if request.method == "DELETE":
-
-        StockControll().removeLot( request.form['id'], db)
+        stc = StockControll()
+        stc.removeLot( request.form['id'], db)
+        stc.calculeStatsFromLots(request.form['stock'], db)
 
         data = {'status':'ok'}
         return jsonify(data)
+
 
 if __name__ == '__main__':
     app.run()

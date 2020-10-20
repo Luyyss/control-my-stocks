@@ -1,4 +1,4 @@
-from lxml import html, etree
+from lxml import html
 from urllib.request import urlopen
 from src.utils.defaults import variables as va
 
@@ -76,9 +76,15 @@ def readStocksFile():
 
     return ast.literal_eval(t)
 
-# def formatFloat(f, d):
-#     return f'{"{:."+str(d)+"f}".format(f)}'
-        #  f'{"{:.2f}".format(f)}'
+def formatFloat(f, d=2):
+    return float( format(f, "^-09."+str(d)+"f").lstrip("0") )
+
+def validCurrentTime():
+    import datetime
+
+    now = datetime.datetime.now()
+
+    return False if ( (now.hour > 17 and now.minute > 30 ) or ( now.hour < 10 ) ) else True
 
 # import os
 # import platform

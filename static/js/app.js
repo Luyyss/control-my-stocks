@@ -2,12 +2,13 @@ app = {'data':{}}
 
 $(document).ready(function () {
     getData()
+    getPrices()
     createGetDataInterval()
     getAutocompleteData()
 })
 
 function createGetDataInterval() {
-    window.getDataInterval = setInterval(getData, 1 * 60 * 1000) // 1 minuto
+    window.getDataInterval = setInterval(getPrices, 0.5 * 60 * 1000) // 1/2 minuto
 }
 
 function stopInterval() {
@@ -19,8 +20,22 @@ function getData() {
         showLoader('#myAccordion')
 
         $.get('/app/data', function (data) {
-            displayStocks(data.stocks)
+            displayStocks(data)
+            // displayLots(data.lots)
+            // displayResumeTotal(data.info)
+        })
+    } catch (error) { console.log(error) }
+}
+
+function getPrices() {
+    try {
+
+        $.get('/app/prices', function (data) {
+            displayStocksInfo(data.stocks)
             displayLots(data.lots)
+            displayResumeTotal(data.info)
+            if(! data.info.refresh ) 
+                stopInterval()
         })
     } catch (error) { console.log(error) }
 }
@@ -31,6 +46,17 @@ function getAutocompleteData() {
             autocomplete(document.getElementById("stock_name"), data );
         })
     } catch (error) { console.log(error) }
+}
+
+function displayStocksInfo(data) {
+    for (let i = 0; i < data.length; i++) {
+        info = data[i]
+
+        $('#stock'+info['code']).find('.change').html(info['change'])
+        $('#stock'+info['code']).find('.price').html(info['price'])
+        $('#stock'+info['code']).find('.avg').html(info['avg_cost'])
+        $('#stock'+info['code']).find('.stats').html(info['resume'])
+    }
 }
 
 function displayStocks(data) {
@@ -50,8 +76,8 @@ function renderStocksTitle() {
                 <div class="row">\n\
                     <div class="col-1">Código</div>\n\
                     <div class="col-2">Ações</div>\n\
-                    <div class="col-2">Preço</div>\n\
                     <div class="col-2">Hoje</div>\n\
+                    <div class="col-2">Preço</div>\n\
                     <div class="col-2">P. médio</div>\n\
                     <div class="col-2">Saldo</div>\n\
                     <div class="col-1">&nbsp;</div>\n\
@@ -63,28 +89,28 @@ function renderStocksTitle() {
 
 function displayLots(data) {
     for (let i = 0; i < data.length; i++) {
-        renderLot( data[i], i )
+        renderLot( data[i] )
     }
 }
 
 function renderStock(stock, i) {
-    $('#myAccordion').append('<div class="card" id="stock'+stock.code+'">\n\
+    $('#myAccordion').append('<div class="card" id="stock'+stock[0]+'">\n\
         <div class="card-header cursor" id="head' + i + '" data-toggle="collapse" data-target="#collapse' + i + '" aria-expanded="true" \n\
             aria-controls="collapse' + i + '">\n\
             <div class="row">\n\
-                <div class="col-1">' + stock.code + '</div>\n\
-                <div class="col-2">' + stock.total_qtd + '</div>\n\
-                <div class="col-2">' + displayMoney(stock.price) + '</div>\n\
-                <div class="col-2">' + stock.change + '</div>\n\
-                <div class="col-2">' + displayMoney(stock.avg_cost) + '</div>\n\
-                <div class="col-2 stats">----</div>\n\
-                <div class="col-1"><img src="/static/image/x-square.svg" title="Remover ação" class="cursor" onclick="requestRemove(\''+stock.code+'\')"/></div>\n\
+                <div class="col-1">' + stock[0] + '</div>\n\
+                <div class="col-2">' + stock[2] + '</div>\n\
+                <div class="col-2 change"></div>\n\
+                <div class="col-2 price"></div>\n\
+                <div class="col-2 avg"></div>\n\
+                <div class="col-2 stats"></div>\n\
+                <div class="col-1"><img src="/static/image/x-square.svg" title="Remover ação" class="cursor" onclick="requestRemove(\''+stock[0]+'\')"/></div>\n\
             </div>\n\
         </div>\n\
         <div id="collapse' + i + '" class="collapse" aria-labelledby="head' + i + '" data-parent="#myAccordion">\n\
             <div class="card-body">\n\
                 <div class="lots"></div>\n\
-                <button type="button" class="btn white" onclick="requestAddLot(\''+stock.code+'\')">\n\
+                <button type="button" class="btn white" onclick="requestAddLot(\''+stock[0]+'\')">\n\
                     <img src="/static/image/plus-square.svg"/>\n\
                 </button>\n\
             </div>\n\
@@ -92,14 +118,25 @@ function renderStock(stock, i) {
     </div>')
 }
 
-function renderLot(lot, i) {
+function displayResume(resume) {
+    try{
+        if (isNaN(parseFloat(resume[0])) )
+            throw "empty";
+        return displayMoney(resume[0]) + ' ( '+resume[1] + '% )'
+    }
+    catch(e) {
+        return '----'
+    }
+}
+
+function renderLot(lot) {
     $('#stock'+lot[1]+' .collapse .card-body .lots').append('<div class="lot" id="lot'+lot[0]+'">\n\
             <div class="row">\n\
                 <div class="col-3">' + lot[4] + '</div>\n\
                 <div class="col-3">' + lot[2] + '</div>\n\
                 <div class="col-2">' + displayMoney(lot[3]) + '</div>\n\
                 <div class="col-3">' + displayMoney(parseInt(lot[2]) * parseFloat(lot[3])) + '</div>\n\
-                <div class="col-1"><img src="/static/image/x-square.svg" title="Remover ação" class="cursor" onclick="requestRemoveLot(\''+lot[0]+'\')"/></div>\n\
+                <div class="col-1"><img src="/static/image/x-square.svg" title="Remover ação" class="cursor" onclick="requestRemoveLot('+lot[0]+', \''+lot[1]+'\')"/></div>\n\
             </div>\n\
         </div>')
 }
@@ -114,7 +151,7 @@ function salvarNovaAcao() {
 
     stock_name = $('#stock_name').val();
     if (stock_name != '' && stock_name.includes(' | ')) {
-        $.post('/app/new', { 'stock': stock_name }, function (res) {
+        $.post('/app/stock', { 'stock': stock_name }, function (res) {
 
             $('#stock_name').val('')
 
@@ -129,11 +166,16 @@ function salvarNovaAcao() {
 function requestRemove(stock) {
     event.stopPropagation()
     if(confirm('Deseja realmente remover esta ação?')) {
-        $.post('/app/remove', {'stock':stock}, function(res){
-            if(res.status == 'ok')
-                $('#stock'+stock).remove()
-            })
-        }
+        $.ajax({
+            url: '/app/stock',
+            type: 'DELETE',
+            data: {'stock':stock},
+            success: function(res) {
+                if(res.status == 'ok')
+                    $('#stock'+stock).remove()
+            }
+        });
+    }
 }
 
 function showLoader(target) {
@@ -144,6 +186,21 @@ function requestAddLot(stock) {
     stopInterval()
     app.data.stock = stock
     $('#stock'+stock+' .card-body').append( getBlockAddLot() )
+
+    IMask( document.getElementsByClassName('date-mask'),{
+        mask: Date,
+        // min: new Date(1990, 0, 1),
+        // max: new Date(2020, 0, 1),
+        lazy: false
+    });
+
+    IMask(document.getElementsByClassName('money-mask'), {
+        mask: Number,
+        thousandsSeparator: '.',
+        scale: 2,
+        radix: ',',
+        min: 0
+    });
 }
 
 function getBlockAddLot() {
@@ -151,15 +208,15 @@ function getBlockAddLot() {
                 <div class="row">\n\
                     <div class="col-3">\n\
                         <label>Data</label>\n\
-                        <input type="text" name="data"/>\n\
+                        <input type="text" name="data" class="date-mask"/>\n\
                     </div>\n\
                     <div class="col-3">\n\
                         <label>Quantidade</label>\n\
-                        <input type="text" name="qtd"/>\n\
+                        <input type="number" name="qtd"/>\n\
                     </div>\n\
                     <div class="col-3">\n\
                         <label>Preço</label>\n\
-                        <input type="text" name="preco"/>\n\
+                        <input type="text" name="preco" class="money-mask"/>\n\
                     </div>\n\
                     <div class="col-2 contentPaidValue">\n\
                         <b</b>\n\
@@ -206,19 +263,27 @@ function saveNewLot(el) {
     return false
 }
 
-function requestRemoveLot(id) {
+function requestRemoveLot(id, stock) {
     event.stopPropagation()
     if(confirm('Deseja realmente remover este lote?')) {
         $.ajax({
             url: '/app/lot',
             type: 'DELETE',
-            data: {'id':id},
+            data: {'id':id, 'stock':stock},
             success: function(res) {
                 console.log(res)
                 $('#lot'+id).remove()
             }
         });
     }
+}
+
+function displayResumeTotal(data) {
+    // {"result":98.46,"result_percent":7.23,"total_paid":1361.25996,"total_today":1459.72},
+    $('#stocksResume').html(
+        '<b>'+displayMoney(data['total_today'])+'</b>\n\
+        <span>'+displayMoney(data['result'])+' ('+data['result_percent']+'%) </span>'
+    )
 }
 
 

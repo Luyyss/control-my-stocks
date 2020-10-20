@@ -51,7 +51,15 @@ db = DataBase(va['DATABASE'])
 # print(all_stocks)
 
 stc = StockControll()
-stc.addLot('ITSA4', '2020-10-18', '17', '9.25', db)
+# stc.addLot('ITSA4', '2020-10-18', '17', '9.25', db)
+# am, sm, avg = stc.calculeStats('ITSA4', db)
+# print(am, sm, avg)
+# print(funcs.formatFloat(avg))
 
 # all_lots = db.select('tb_lot')
 # print(all_lots)
+
+# data = {'price':25, 'total_qtd':100, 'avg_cost':22.75}
+# data = {'price':4.19, 'total_qtd':1, 'avg_cost':5.20}
+
+# print(stc.calculeResume(data))

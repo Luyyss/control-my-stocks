@@ -45,7 +45,7 @@ class DataBase:
 
         aux = ''
         for key, elem in data.items():
-            aux += key + " = '"+ elem + "', "
+            aux += str(key) + " = '"+ str(elem) + "', "
 
         sql += ' SET '+ aux[0:-2]
 
@@ -66,6 +66,8 @@ class DataBase:
 
     def select(self, table, cols=None, where=None, adicional=None):
 
+        self.__cursor = self.__conn.cursor()
+
         cols = '*' if cols == None else funcs.joinDict(cols)
 
         sql = 'SELECT '+cols+' FROM '+ table
@@ -73,14 +75,13 @@ class DataBase:
         if where != None:
             aux = ''
             for key, elem in where.items():
-                aux += key + " = '"+ elem + "', "
+                aux += key + " = '"+ str(elem) + "', "
 
             sql += ' WHERE '+ aux[0:-2]
 
         if adicional != None:
             sql += adicional
 
-        self.__cursor = self.__conn.cursor()
         self.__cursor.execute(sql)
 
         rows = self.__cursor.fetchall()
