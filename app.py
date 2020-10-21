@@ -5,7 +5,8 @@ from src.classes.StockControll import StockControll
 from flask import Flask, session, render_template, jsonify, request
 
 
-db = DataBase(va['DATABASE'])
+# db = DataBase(va['DATABASE'])
+db = DataBase(os.getenv('DATABASE_URL'))
 
 app = Flask(__name__, template_folder='src/pages')
 
@@ -23,18 +24,17 @@ def home():
 @app.route('/app/data', methods=['GET'])
 def getData():
 
-    all_stocks = db.select('tb_stock', ['code', 'name', 'total_qtd', 'avg_cost'])
+    all_stocks = db.select('tb_stock', ['code', 'total_qtd'])
     return jsonify(all_stocks)
 
 @app.route('/app/prices', methods=['GET'])
 def getPrices():
 
     all_stocks = db.select('tb_stock', ['code', 'name', 'total_qtd', 'avg_cost'])
-    all_lots = db.select('tb_lot')
 
     data = {
         'stocks': [],
-        'lots': all_lots,
+        'lots': [],
         'info':{
             'total_paid':0,
             'total_today':0,
@@ -43,24 +43,29 @@ def getPrices():
         }
     }
 
-    stc = StockControll()
+    if len(all_stocks) > 0:
+        all_lots = db.select('tb_lot')
 
-    for stock, name, amount, avg_cost in all_stocks:
-        aux = funcs.getStockInfo( stock )
-        aux['code'] = stock
-        aux['name'] = name
-        aux['total_qtd'] = amount
-        aux['avg_cost'] = avg_cost
-        aux['resume'] = stc.calculeResume(aux)
-        data['stocks'].append( aux )
-        data['info']['total_today'] += float(aux['price']) * int(amount)
-        data['info']['total_paid'] += float(avg_cost) * int(amount)
+        data['lots'] = all_lots
 
-    data['info']['result'] = data['info']['total_today'] - data['info']['total_paid']
-    data['info']['result_percent'] = funcs.formatFloat( (data['info']['result'] / data['info']['total_paid']) * 100 )
+        stc = StockControll()
 
-    data['info']['result'] = funcs.formatFloat(data['info']['result'])
-    data['info']['refresh'] = funcs.validCurrentTime()
+        for stock, name, amount, avg_cost in all_stocks:
+            aux = funcs.getStockInfo( stock )
+            aux['code'] = stock
+            aux['name'] = name
+            aux['total_qtd'] = amount
+            aux['avg_cost'] = avg_cost
+            aux['resume'] = stc.calculeResume(aux)
+            data['stocks'].append( aux )
+            data['info']['total_today'] += float(aux['price']) * int(amount)
+            data['info']['total_paid'] += float(avg_cost) * int(amount)
+
+        data['info']['result'] = data['info']['total_today'] - data['info']['total_paid']
+        data['info']['result_percent'] = funcs.formatFloat( (data['info']['result'] / data['info']['total_paid']) * 100 )
+
+        data['info']['result'] = funcs.formatFloat(data['info']['result'])
+        data['info']['refresh'] = funcs.validCurrentTime()
 
     return jsonify(data)
 
@@ -68,8 +73,8 @@ def getPrices():
 @app.route('/app/stocks', methods=['GET'])
 def getStocks():
 
-    return jsonify( funcs.getAllStocksSymbols() )
-    # return jsonify( funcs.readStocksFile() )
+    # return jsonify( funcs.getAllStocksSymbols() )
+    return jsonify( funcs.readStocksFile() )
 
 
 @app.route('/app/stock', methods=['POST', 'DELETE'])
@@ -110,7 +115,7 @@ def newLot():
         stock = request.form['stock']
         data = request.form['data']
         qtd = request.form['qtd']
-        preco = request.form['preco']
+        preco = request.form['preco'].replace('.','').replace(',','.')
 
         stc = StockControll()
         stc.addLot(stock, data, qtd, preco, db)

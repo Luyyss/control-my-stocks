@@ -70,7 +70,7 @@ def readStocksFile():
 
     import ast
 
-    f = open('stocks.json', 'r')
+    f = open('stocks.json', 'r', encoding="utf8")
     t = f.read()
     f.close()
 
@@ -83,7 +83,7 @@ def validCurrentTime():
     import datetime
 
     now = datetime.datetime.now()
-
+    print('Hour: '+ str(now.hour))
     return False if ( (now.hour > 17 and now.minute > 30 ) or ( now.hour < 10 ) ) else True
 
 # import os

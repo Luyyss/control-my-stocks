@@ -4,10 +4,11 @@ import src.utils.functions as funcs
 
 class DataBase:
 
-    def __init__(self, data):
-        self.__data = data
+    def __init__(self, url):
+        # self.__data = data
         self.__conn = conn = psycopg2.connect(
-            database=self.__data['name'], user=self.__data['user'], password=self.__data['passw'], host=self.__data['host'], port= '5432'
+            url
+            # database=self.__data['name'], user=self.__data['user'], password=self.__data['passw'], host=self.__data['host'], port= '5432'
         )
 
     def insert(self, table, cols, args):
@@ -101,7 +102,7 @@ class DataBase:
         self.__cursor.execute("DROP TABLE IF EXISTS tb_stock")
 
         sql ='''CREATE TABLE tb_stock(
-            code CHAR(5) UNIQUE NOT NULL,
+            code CHAR(6) UNIQUE NOT NULL,
             name CHAR(200),
             total_qtd INT DEFAULT 0,
             avg_cost FLOAT DEFAULT 0

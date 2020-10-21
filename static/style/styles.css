@@ -7,8 +7,15 @@ body {
   display: -ms-flexbox;
   display: flex;
   color: #FFF;
-  text-shadow: 0 .05rem .1rem rgba(0, 0, 0, .5);
+  /* text-shadow: 0 .05rem .1rem rgba(0, 0, 0, .5); */
   box-shadow: inset 0 0 5rem rgba(0, 0, 0, .5);
+}
+
+.modal-content{
+    color: #000;
+}
+.modal-content button{
+    color: #FFF;
 }
 
 .cover-container {max-width: 70em !important;}
@@ -16,13 +23,17 @@ body {
 .cursor{cursor: pointer !important; }
 .left{float: left;}
 .right{float: right;}
+.text-center{text-align: center;}
+.img-icon{filter: invert(80%); width: 17px;}
 
-#stocksResume{padding: 15px; border: 1px solid rgba(0,0,0,.125);}
+#stocksResume{padding: 15px; border: 1px solid rgba(0,0,0,.125); margin-bottom: 10px;}
 #stocksResume b{font-size: 30px; display: block;}
 .loader{width: 100%; min-height: 100px; display: flex; align-items: center; justify-content: center;}
 .card{background-color: transparent !important;}
 .lot{border-bottom: 1px solid rgba(0,0,0,.125);}
 .lot .row div{padding: 3px;}
+
+.btnAdd{background-color: rgba(0,0,0,.03); width: 300px; height: 45px; border: 1px solid rgba(0,0,0,.125); margin-top: 10px;}
 
 /* .bd-placeholder-img {
     font-size: 1.125rem;

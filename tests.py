@@ -3,10 +3,14 @@ from src.utils.defaults import variables as va
 import src.utils.functions as funcs
 from src.classes.StockControll import StockControll
 from flask import jsonify
-
+import codecs
 import numpy as np
+from lxml import html, etree
+import os
 
-db = DataBase(va['DATABASE'])
+# db = DataBase(va['DATABASE'])
+print(os.getenv('DATABASE_URL'))
+# db = DataBase(os.getenv('DATABASE_URL'))
 # db.createTables()
 
 # db.insert('tb_stock', ['code', 'name'], ['BBSE3', 'BB Seguridade']) #, '0', '0', '0'
@@ -50,7 +54,7 @@ db = DataBase(va['DATABASE'])
 # all_stocks = db.select('tb_stock', ['code', 'name', 'total_qtd'])
 # print(all_stocks)
 
-stc = StockControll()
+# stc = StockControll()
 # stc.addLot('ITSA4', '2020-10-18', '17', '9.25', db)
 # am, sm, avg = stc.calculeStats('ITSA4', db)
 # print(am, sm, avg)
@@ -63,3 +67,9 @@ stc = StockControll()
 # data = {'price':4.19, 'total_qtd':1, 'avg_cost':5.20}
 
 # print(stc.calculeResume(data))
+
+# os.environ['host'] = 'ec2-3-218-75-21.compute-1.amazonaws.com',
+# os.environ['user'] = str('cbolmnrxydramg'),
+# os.environ['passw'] = 'f6dd6b3e65549a0cf705fcaacd383de68a39edb1413bd69fd60be6c91e1fc8b7'
+# postgres://cbolmnrxydramg:f6dd6b3e65549a0cf705fcaacd383de68a39edb1413bd69fd60be6c91e1fc8b7@ec2-3-218-75-21.compute-1.amazonaws.com:5432/dehskavu22md39
+# print(os.environ.get('DATABASE_URL'))

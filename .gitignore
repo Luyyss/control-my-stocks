@@ -1,4 +1,6 @@
 stocks.json
+prod.env
+tests.py
 .ipynb_checkpoints
 .vscode/*
 __pycache__/*

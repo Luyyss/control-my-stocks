@@ -2,8 +2,6 @@ app = {'data':{}}
 
 $(document).ready(function () {
     getData()
-    getPrices()
-    createGetDataInterval()
     getAutocompleteData()
 })
 
@@ -21,8 +19,9 @@ function getData() {
 
         $.get('/app/data', function (data) {
             displayStocks(data)
-            // displayLots(data.lots)
-            // displayResumeTotal(data.info)
+
+            getPrices()
+            createGetDataInterval()
         })
     } catch (error) { console.log(error) }
 }
@@ -55,16 +54,20 @@ function displayStocksInfo(data) {
         $('#stock'+info['code']).find('.change').html(info['change'])
         $('#stock'+info['code']).find('.price').html(displayMoney(info['price']))
         $('#stock'+info['code']).find('.avg').html(displayMoney(info['avg_cost']))
-        $('#stock'+info['code']).find('.stats').html(displayMoney( info['resume'][0] ) + ' ('+displayMoney(info['resume'][0])+')')
+        $('#stock'+info['code']).find('.stats').html( info['total_qtd'] != 0 ? displayMoney( info['resume'][0] ) + ' ('+info['resume'][1]+'%)' : '----')
     }
 }
 
 function displayStocks(data) {
+    if(data.length > 0) {
+        renderStocksTitle()
 
-    renderStocksTitle()
-
-    for (let i = 0; i < data.length; i++) {
-        renderStock( data[i], i )
+        for (let i = 0; i < data.length; i++) {
+            renderStock( data[i], i )
+        }
+    }
+    else{
+        $('#myAccordion').html('')
     }
 }
 
@@ -76,8 +79,8 @@ function renderStocksTitle() {
                 <div class="row">\n\
                     <div class="col-1">Código</div>\n\
                     <div class="col-2">Ações</div>\n\
-                    <div class="col-2">Hoje</div>\n\
                     <div class="col-2">Preço</div>\n\
+                    <div class="col-2">Hoje</div>\n\
                     <div class="col-2">P. médio</div>\n\
                     <div class="col-2">Saldo</div>\n\
                     <div class="col-1">&nbsp;</div>\n\
@@ -88,10 +91,8 @@ function renderStocksTitle() {
 }
 
 function displayLots(data) {
-
-    $('#stock'+data[0][1]+' .collapse .card-body .lots').html('') // TO CLEAR LOT SPACE
-
     for (let i = 0; i < data.length; i++) {
+        $('#stock'+data[0][1]+' .collapse .card-body .lots').html('') // TO CLEAR LOT SPACE
         renderLot( data[i] )
     }
 }
@@ -102,19 +103,19 @@ function renderStock(stock, i) {
             aria-controls="collapse' + i + '">\n\
             <div class="row">\n\
                 <div class="col-1">' + stock[0] + '</div>\n\
-                <div class="col-2">' + stock[2] + '</div>\n\
-                <div class="col-2 change">--</div>\n\
+                <div class="col-2">' + (stock[1] > 0 ? stock[1] : '--') + '</div>\n\
                 <div class="col-2 price">--</div>\n\
+                <div class="col-2 change">--</div>\n\
                 <div class="col-2 avg">--</div>\n\
                 <div class="col-2 stats">--</div>\n\
-                <div class="col-1"><img src="/static/image/x-square.svg" title="Remover ação" class="cursor" onclick="requestRemove(\''+stock[0]+'\')"/></div>\n\
+                <div class="col-1"><img src="/static/image/x-square.svg" title="Remover ação" class="img-icon cursor" onclick="requestRemove(\''+stock[0]+'\')"/></div>\n\
             </div>\n\
         </div>\n\
         <div id="collapse' + i + '" class="collapse" aria-labelledby="head' + i + '" data-parent="#myAccordion">\n\
             <div class="card-body">\n\
                 <div class="lots"></div>\n\
                 <button type="button" class="btn white" onclick="requestAddLot(\''+stock[0]+'\')">\n\
-                    <img src="/static/image/plus-square.svg"/>\n\
+                    <img src="/static/image/plus-square.svg" class="img-icon cursor"/>\n\
                 </button>\n\
             </div>\n\
         </div>\n\
@@ -139,13 +140,13 @@ function renderLot(lot) {
                 <div class="col-3">' + lot[2] + '</div>\n\
                 <div class="col-2">' + displayMoney(lot[3]) + '</div>\n\
                 <div class="col-3">' + displayMoney(parseInt(lot[2]) * parseFloat(lot[3])) + '</div>\n\
-                <div class="col-1"><img src="/static/image/x-square.svg" title="Remover ação" class="cursor" onclick="requestRemoveLot('+lot[0]+', \''+lot[1]+'\')"/></div>\n\
+                <div class="col-1"><img src="/static/image/x-square.svg" title="Remover ação" class="img-icon cursor" onclick="requestRemoveLot('+lot[0]+', \''+lot[1]+'\')"/></div>\n\
             </div>\n\
         </div>')
 }
 
 function displayMoney(m) {
-    if(m == '0')
+    if(m == '0' || isNaN(parseFloat(m)))
         return '----'
     return 'R$ '+parseFloat(m).toFixed(2)
 }
@@ -190,18 +191,8 @@ function requestAddLot(stock) {
     app.data.stock = stock
     $('#stock'+stock+' .card-body').append( getBlockAddLot() )
 
-    IMask( document.getElementsByClassName('date-mask'),{
-        mask: Date,
-        lazy: false
-    });
-
-    IMask(document.getElementsByClassName('money-mask'), {
-        mask: Number,
-        thousandsSeparator: '.',
-        scale: 2,
-        radix: ',',
-        min: 0
-    });
+    $('.date-mask').mask('00/00/0000')
+    $('.money-mask').mask("#.##0,00", {reverse: true})
 }
 
 function getBlockAddLot() {
@@ -213,7 +204,7 @@ function getBlockAddLot() {
                     </div>\n\
                     <div class="col-3">\n\
                         <label>Quantidade</label>\n\
-                        <input type="number" name="qtd"/>\n\
+                        <input type="number" name="qtd" min="1" value="1"/>\n\
                     </div>\n\
                     <div class="col-3">\n\
                         <label>Preço</label>\n\
@@ -223,7 +214,7 @@ function getBlockAddLot() {
                         <b</b>\n\
                     </div>\n\
                     <div class="col-1">\n\
-                        <button type="submit" onclick="saveAddLot(this)"><img src="static/image/check-square.svg"/></button>\n\
+                        <button type="submit" onclick="saveAddLot(this)"><img src="static/image/check-square.svg" class="img-icon cursor"/></button>\n\
                     </div>\n\
                 </div>\n\
             </form>'
@@ -281,7 +272,7 @@ function requestRemoveLot(id, stock) {
 
 function displayResumeTotal(data) {
     $('#stocksResume b').html(displayMoney(data['total_today']))
-    $('#stocksResume span').html(displayMoney(data['result'])+' ('+data['result_percent']+'%')
+    $('#stocksResume span').html(displayMoney(data['result'])+' ('+data['result_percent']+'%)')
 }
 
 
