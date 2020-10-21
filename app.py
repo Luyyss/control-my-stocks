@@ -3,7 +3,7 @@ from src.classes.DataBase import DataBase
 from src.utils.defaults import variables as va
 from src.classes.StockControll import StockControll
 from flask import Flask, session, render_template, jsonify, request
-
+import os
 
 # db = DataBase(va['DATABASE'])
 db = DataBase(os.getenv('DATABASE_URL'))
