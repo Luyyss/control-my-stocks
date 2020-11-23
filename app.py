@@ -5,8 +5,8 @@ from src.classes.StockControll import StockControll
 from flask import Flask, session, render_template, jsonify, request
 import os
 
-# db = DataBase(va['DATABASE'])
-db = DataBase(os.getenv('DATABASE_URL'))
+db = DataBase('postgres://cbolmnrxydramg:f6dd6b3e65549a0cf705fcaacd383de68a39edb1413bd69fd60be6c91e1fc8b7@ec2-3-218-75-21.compute-1.amazonaws.com:5432/dehskavu22md39')
+# db = DataBase(os.getenv('DATABASE_URL'))
 
 app = Flask(__name__, template_folder='src/pages')
 
@@ -51,8 +51,8 @@ def getPrices():
         stc = StockControll()
 
         for stock, name, amount, avg_cost in all_stocks:
-            aux = funcs.getStockInfo( stock )
-            aux['code'] = stock
+            aux = funcs.getStockInfo( stock.strip() )
+            aux['code'] = stock.strip()
             aux['name'] = name
             aux['total_qtd'] = amount
             aux['avg_cost'] = avg_cost
@@ -61,10 +61,10 @@ def getPrices():
             data['info']['total_today'] += float(aux['price']) * int(amount)
             data['info']['total_paid'] += float(avg_cost) * int(amount)
 
-        data['info']['result'] = data['info']['total_today'] - data['info']['total_paid']
-        data['info']['result_percent'] = funcs.formatFloat( (data['info']['result'] / data['info']['total_paid']) * 100 )
+        if data['info']['total_paid'] > 0 and data['info']['total_today'] > 0:
+            data['info']['result'] = funcs.formatFloat( data['info']['total_today'] - data['info']['total_paid'] )
+            data['info']['result_percent'] = funcs.formatFloat( (data['info']['result'] / data['info']['total_paid']) * 100 )
 
-        data['info']['result'] = funcs.formatFloat(data['info']['result'])
         data['info']['refresh'] = funcs.validCurrentTime()
 
     return jsonify(data)
@@ -72,8 +72,6 @@ def getPrices():
 
 @app.route('/app/stocks', methods=['GET'])
 def getStocks():
-
-    # return jsonify( funcs.getAllStocksSymbols() )
     return jsonify( funcs.readStocksFile() )
 
 
@@ -91,8 +89,7 @@ def newStock():
         stc = StockControll()
 
         if len(stock) > 0:
-            # redirect(url_for('dashboard'))
-            stc.addStock(code, name, db)
+            stc.addStock(code.strip(), name, db)
             data['status'] = 'ok'
         else:
             data['status'] = 'erro'

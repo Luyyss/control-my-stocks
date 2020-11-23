@@ -98,6 +98,7 @@ function displayLots(data) {
 }
 
 function renderStock(stock, i) {
+    stock[0] = (stock[0]).trim()
     $('#myAccordion').append('<div class="card" id="stock'+stock[0]+'">\n\
         <div class="card-header cursor" id="head' + i + '" data-toggle="collapse" data-target="#collapse' + i + '" aria-expanded="true" \n\
             aria-controls="collapse' + i + '">\n\

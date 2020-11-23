@@ -26,7 +26,7 @@ def getStockChange(page):
     return getXPathContent( page, va['SCRAPING']['xp_change'] )
 
 def getStockInfo(name):
-    page = getStockPage(name)
+    page = getStockPage(name )
 
     data = {
         # 'name':getStockName(page),
