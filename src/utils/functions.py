@@ -8,7 +8,7 @@ def getWebPage(url):
 
 def getXPathContent(text, xp):
     tree = html.fromstring(text)
-    t = tree.xpath(xp)[0].text | 0
+    t = tree.xpath(xp)[0].text
     return 0 if t is None else t
 
 def getStockUrl(name):
